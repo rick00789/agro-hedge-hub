@@ -37,7 +37,8 @@ const Dashboard = () => {
   
   const historicalPrices = priceData.filter(p => !p.isForecast);
   const lastHistoricalPrice = historicalPrices[historicalPrices.length - 1]?.price || currentPrice;
-  const forecastPrice = priceData.find(p => p.isForecast)?.price || currentPrice + 50;
+  const forecastPrices = priceData.filter(p => p.isForecast);
+  const forecastPrice = forecastPrices[forecastPrices.length - 1]?.price || currentPrice + 50;
   const priceChange = currentPrice - lastHistoricalPrice;
   const priceChangePercent = lastHistoricalPrice ? ((priceChange / lastHistoricalPrice) * 100).toFixed(2) : '0.00';
   
