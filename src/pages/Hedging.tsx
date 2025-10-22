@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Shield, TrendingUp, TrendingDown } from 'lucide-react';
-import { getCurrentMarketPrice, HedgePosition } from '@/data/mockData';
+import { HedgePosition } from '@/data/mockData';
 import { toast } from 'sonner';
+import { marketService } from '@/services/marketService';
 
 const Hedging = () => {
   const [currentPrice, setCurrentPrice] = useState(0);
@@ -14,7 +15,11 @@ const Hedging = () => {
   const [showPositions, setShowPositions] = useState(false);
   
   useEffect(() => {
-    const price = getCurrentMarketPrice();
+    // Start market simulation
+    marketService.startMarketSimulation();
+    
+    // Set initial price
+    const price = marketService.getCurrentPrice();
     setCurrentPrice(price);
     
     // Load saved positions from localStorage
@@ -22,6 +27,15 @@ const Hedging = () => {
     if (savedPositions) {
       setPositions(JSON.parse(savedPositions));
     }
+    
+    // Subscribe to live price updates
+    const unsubscribe = marketService.subscribe((newPrice) => {
+      setCurrentPrice(newPrice);
+    });
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
   
   const handleHedge = () => {

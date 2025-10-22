@@ -3,22 +3,43 @@ import { Card } from '@/components/ui/card';
 import { Sprout, TrendingUp } from 'lucide-react';
 import PriceChart from '@/components/PriceChart';
 import AlertCard from '@/components/AlertCard';
-import { generatePriceData, mockAlerts, PricePoint, MarketAlert } from '@/data/mockData';
+import { mockAlerts, PricePoint, MarketAlert } from '@/data/mockData';
+import { marketService } from '@/services/marketService';
 
 const Dashboard = () => {
   const [priceData, setPriceData] = useState<PricePoint[]>([]);
+  const [currentPrice, setCurrentPrice] = useState<number>(0);
+  const [previousPrice, setPreviousPrice] = useState<number>(0);
   const [alerts] = useState<MarketAlert[]>(mockAlerts);
   
   useEffect(() => {
-    // Simulate API call to fetch price data
-    const data = generatePriceData();
-    setPriceData(data);
+    // Start market simulation
+    marketService.startMarketSimulation();
+    
+    // Initial data load
+    const initialHistory = marketService.getPriceHistory();
+    setPriceData(initialHistory);
+    const initialPrice = marketService.getCurrentPrice();
+    setCurrentPrice(initialPrice);
+    setPreviousPrice(initialPrice);
+    
+    // Subscribe to price updates
+    const unsubscribe = marketService.subscribe((newPrice) => {
+      setPreviousPrice(currentPrice);
+      setCurrentPrice(newPrice);
+      setPriceData(marketService.getPriceHistory());
+    });
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
   
-  const currentPrice = priceData.find(p => !p.isForecast)?.price || 4500;
-  const forecastPrice = priceData.find(p => p.isForecast)?.price || 4550;
-  const priceChange = forecastPrice - currentPrice;
-  const priceChangePercent = ((priceChange / currentPrice) * 100).toFixed(2);
+  const historicalPrices = priceData.filter(p => !p.isForecast);
+  const lastHistoricalPrice = historicalPrices[historicalPrices.length - 1]?.price || currentPrice;
+  const forecastPrice = priceData.find(p => p.isForecast)?.price || currentPrice + 50;
+  const priceChange = currentPrice - lastHistoricalPrice;
+  const priceChangePercent = lastHistoricalPrice ? ((priceChange / lastHistoricalPrice) * 100).toFixed(2) : '0.00';
   
   return (
     <div className="min-h-screen bg-background pb-20">

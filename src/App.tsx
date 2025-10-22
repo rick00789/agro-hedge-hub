@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,10 +10,21 @@ import Contracts from "./pages/Contracts";
 import Education from "./pages/Education";
 import Navigation from "./components/Navigation";
 import NotFound from "./pages/NotFound";
+import { marketService } from "./services/marketService";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    // Start market simulation when app loads
+    marketService.startMarketSimulation();
+    
+    return () => {
+      marketService.stopMarketSimulation();
+    };
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -32,6 +44,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
